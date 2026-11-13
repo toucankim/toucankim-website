@@ -1,0 +1,44 @@
+media:
+  input: media
+  output: /media
+
+content:
+  - name: works
+    label: 작품 포트폴리오
+    type: collection
+    path: content/works
+    fields:
+      - name: title
+        label: 작품 제목
+        type: string
+        required: true
+      - name: cover
+        label: 대표 사진
+        type: image
+      - name: gallery
+        label: 작품 사진
+        type: image
+        options:
+          multiple: true
+      - name: body
+        label: 작품 설명 및 제작 과정
+        type: rich-text
+
+  - name: journal
+    label: 제작 일지 및 글
+    type: collection
+    path: content/journal
+    fields:
+      - name: title
+        label: 글 제목
+        type: string
+        required: true
+      - name: date
+        label: 작성일
+        type: date
+      - name: cover
+        label: 대표 사진
+        type: image
+      - name: body
+        label: 본문
+        type: rich-text
