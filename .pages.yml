@@ -20,6 +20,18 @@ content:
         type: image
         options:
           multiple: true
+      - name: featured
+        label: 메인 전시
+        type: boolean
+        default: false
+        description: 체크한 작품만 메인 Selected Works 후보에 포함됩니다.
+      - name: featured_order
+        label: 메인 전시 순서 (1~3)
+        type: number
+        default: 3
+        options:
+          min: 1
+        description: 숫자가 작을수록 먼저 표시됩니다. 체크한 작품 중 앞의 3개만 표시됩니다.
       - name: body
         label: 작품 설명 및 제작 과정
         type: rich-text

@@ -29,7 +29,7 @@ function loadCollection(which) {
     .map(e=> {
       const file=path.join(folder,e.name), parsed=matter(fs.readFileSync(file,'utf8'));
       const meta=parsed.data||{};
-      return { slug: slug(e.name), title: String(meta.title||e.name.replace(/\.(md|markdown)$/i,'')), date: meta.date && !Number.isNaN(new Date(meta.date).getTime()) ? new Date(meta.date).toISOString().slice(0,10) : '', cover: validImage(meta.cover), body: parsed.content, gallery: Array.isArray(meta.gallery) ? meta.gallery.map(validImage).filter(Boolean) : [] };
+      return { slug: slug(e.name), title: String(meta.title||e.name.replace(/\.(md|markdown)$/i,'')), date: meta.date && !Number.isNaN(new Date(meta.date).getTime()) ? new Date(meta.date).toISOString().slice(0,10) : '', cover: validImage(meta.cover), body: parsed.content, gallery: Array.isArray(meta.gallery) ? meta.gallery.map(validImage).filter(Boolean) : [], featured: meta.featured === true || meta.featured === 'true', featured_order: Number.isFinite(Number(meta.featured_order)) && String(meta.featured_order ?? '').trim() !== '' ? Number(meta.featured_order) : 999 };
     }).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title));
 }
 const entries={journal:loadCollection('journal'),works:loadCollection('works')};
@@ -53,9 +53,17 @@ for(const type of ['journal','works']) {
   const dest=path.join(dir,a.slug);fs.mkdirSync(dest,{recursive:true});fs.writeFileSync(path.join(dest,'index.html'),htmlDocument(a.title,article));
  }
 }
+// Selected Works: only editorially chosen works, ordered 1 → 2 → 3.
+const featuredWorks = entries.works.filter(w => w.featured)
+  .sort((a,b) => a.featured_order - b.featured_order || a.title.localeCompare(b.title, 'ko'))
+  .slice(0,3);
+const featuredCards = featuredWorks.length ? featuredWorks.map(w =>
+  `<a class="work" href="/works/${encodeURIComponent(w.slug)}/"><div class="thumb">${w.cover ? `<img loading="lazy" src="${esc(w.cover)}" alt="${esc(w.title)}" style="width:100%;height:100%;object-fit:cover">` : '<span>WORK</span>'}</div><h3>${esc(w.title)}</h3><p>작품 자세히 보기 ↗</p></a>`
+).join('') : '<p class="muted">아직 선정된 대표 작품이 없습니다.</p>';
 // Keep the existing landing page, but add an obvious menu and a recent journal section.
 let home=fs.readFileSync(path.join(root,'index.html'),'utf8');
 home=home.replace('<a href="#works">WORKS</a>', '<a href="/works/">WORKS</a><a href="/journal/">JOURNAL</a>');
+home=home.replace(/<div class="cards" id="workCards">[\s\S]*?<\/div>/, `<div class="cards" id="workCards">${featuredCards}</div>`);
 const latest=entries.journal.slice(0,3);
 const journalSection=`<div class="divider"></div><section class="section wrap" id="journal"><div class="sectiontitle"><div><div class="eyebrow">JOURNAL</div><h2>제작 일지 및 글</h2></div><a class="cta" href="/journal/">전체 글 보기 ↗</a></div><div class="cards">${latest.length?latest.map(a=>`<a class="work" href="/journal/${encodeURIComponent(a.slug)}/"><div class="thumb">${a.cover?`<img src="${esc(a.cover)}" alt="" style="width:100%;height:100%;object-fit:cover">`:'<span>JOURNAL</span>'}</div><h3>${esc(a.title)}</h3><p>${esc(a.date)}</p></a>`).join(''):'<p class="muted">아직 작성된 글이 없습니다.</p>'}</div></section>`;
 home=home.replace('<div class="divider"></div><section class="section wrap" id="process">',journalSection+'<div class="divider"></div><section class="section wrap" id="process">');
